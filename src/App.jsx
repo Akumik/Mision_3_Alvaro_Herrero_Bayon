@@ -1,10 +1,10 @@
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
 import './App.css'
 import { useState, useEffect } from 'react';
 import { getMonsters } from './api';
-import { onlyLarge, simplify } from './logic';
+import { onlyLarge, simplify, filterBySpecies, countBySpecies } from './logic';
+import MonsterList from './MonsterList.jsx'
+import SpeciesFilter from './SpeciesFilter.jsx';
+
 
 
 
@@ -12,37 +12,39 @@ export default function App() {
   const [monsters, setMonsters] = useState([]);
   const [status, setStatus] = useState("loading");
   const [error, setError] = useState(null);
-  
+  const [species, setSpecies] = useState("");
   useEffect(() => {
-    const controller = new AbortController();
-  
-    getMonsters(controller.signal).then(data => {
+    let ignore = false;
+    getMonsters().then(data =>{
+      if(ignore){
+        return;
+      }
       setMonsters(simplify(onlyLarge(data)));
       setStatus("ready");
-    }).catch(err => {
-    if(err.name === "AbortError") {
-      return;
-    }
-    setError(err.message);
-    setStatus("error");
-  });
-  return () => controller.abort();
+    })
+    .catch(err => {
+      if(ignore){
+        return;
+      }
+      setError(err.message);
+      setStatus("error");
+    });
+    return () => {ignore = true; };
   }, []);
   
   if (status === "loading"){
     return <p className="loading">Loading monsters..</p>;
-    if (status === "error"){
-      return <p className="error">Failed to load data: {error}</p>
-    }
   }
+  if (status === "error"){
+    return <p className="error">Failed to load data: {error}</p>
+  }
+  const counts = countBySpecies(monsters);
+  const visibleMonsters = filterBySpecies(monsters, species);
   return (
     <>
-      <h1>Monster Hunter World Monster</h1>
-      <ul>
-        {monsters.map(monsters => (
-          <li key={monsters.id}>{monsters.name}</li>
-        ))}
-      </ul>
+      <h1>Monster Hunter World Monsters</h1>
+      <SpeciesFilter counts={counts} value={species} onChange={setSpecies}/>
+      <MonsterList monsters = {visibleMonsters} onSelect={id => console.log("click", id)}/>
     </>
   );
 }
