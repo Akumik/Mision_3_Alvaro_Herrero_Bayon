@@ -8,7 +8,7 @@ export default function MonsterList({ monsters, onSelect}){
     return(
         <ul className="grid">
             {monsters.map(monster => (
-                <MonsterCard key = {monster.id} monster = {monster} onSelect = {id => console.log("clisk, id")}/>
+                <MonsterCard key = {monster.id} monster = {monster} onSelect = {onSelect}/>
             ))}
         </ul>
     );
