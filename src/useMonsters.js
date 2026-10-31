@@ -3,26 +3,33 @@ import { getMonsters } from "./api";
 import { onlyLarge, simplify } from "./logic";
 
 export default function useMonsters(){
-    const [monsters, setMonsters] = useState([]);
-    const [status, setStatus] = useState("loading");
-    const [error, setError] = useState(null);
-
+    const [state, setState] = useState({
+        status: "loading",
+        monsters: [],
+        error: null
+    });
     useEffect(() => {
         const controller = new AbortController();
 
         getMonsters(controller.signal).then(data => {
-            setMonsters(simplify(onlyLarge(data)));
-            setStatus("ready");
+            setState({
+                status: "ready",
+                monsters: simplify(onlyLarge(data)),
+                error: null
+            });
         })
         .catch(err => {
             if(err.name === "AbortError"){
                 return;
             }
-            setError(err.message);
-            setStatus("error");
+            setState({
+                status: "error",
+                monsters: [],
+                error: err.message
+            });
         });
         return () => controller.abort();
         
     }, []);
-    return { monsters, status, error};
+    return state;
 }
